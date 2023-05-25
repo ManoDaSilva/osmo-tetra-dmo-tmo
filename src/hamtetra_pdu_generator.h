@@ -23,15 +23,21 @@
 #include "tetra_dll_pdu.h"
 #include <phy/tetra_burst.h>
 #include <phy/tetra_burst_sync.h>
+#include "pdus.h"
 
 #include "hamtetra_config.h"
 
 #define swap16(x) ((x)<<8)|((x)>>8)
+
+#define BLEN 510
 
 int build_pdu_dpress_sync(uint8_t fn, uint8_t tn, enum tdma_master_slave_link_flag dir, uint8_t frame_countdown, uint8_t channel_state, uint8_t *out);
 int build_pdu_dpress_sync_gate(uint8_t fn, uint8_t tn, enum tdma_master_slave_link_flag dir, uint8_t frame_countdown, uint8_t *out);
 
 int build_pdu_dmac_sync_schs(struct tetra_dmo_pdu_dmac_sync *dmac_sync, enum tdma_master_slave_link_flag link_flag, uint8_t fn, uint8_t tn, uint8_t frame_countdown, uint8_t *out);
 int build_pdu_dmac_sync_schh(struct tetra_dmo_pdu_dmac_sync *dmac_sync, uint8_t fn, uint8_t tn, uint8_t frame_countdown, uint8_t *out);
+
+int build_ncdb(uint8_t *buf);
+int build_scdb(uint8_t *buf, const uint8_t fn);
 
 #endif
