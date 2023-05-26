@@ -262,21 +262,35 @@ int build_pdu_dmac_sync_schh(struct tetra_dmo_pdu_dmac_sync *dmac_sync, uint8_t 
 
 
 /* Build a full 'Normal continuous downlink burst'
- * from MAC-DATA PDU in SCH/HD and SYSINFO PDU in BNCH */
+ * from MAC-DATA PDU in SCH/HD and SYSINFO PDU in BNCH 
+ 9.4.4.2.5
+ 1 to 12: Normal Training Sequence 3
+ 13 to 14: Phase adjustment Bits 
+ 15 to 230: Scrambled Block 1 Bits 
+ 231 to 244: Scrambled broadcast 
+ 245 to 266: Normal training sequence 
+ 267 to 282: Scrambled broadcast bits
+ 283 to 498: Scrambled Block 2 bits 
+ 499 to 500: Phase adjustment bits 
+ 501 to 510: Normal training sequence 3
+ */
 int build_ncdb(uint8_t *buf)
 {
+	//Sub-block 1 Init
 	uint8_t sb1_type2[144];
 	uint8_t sb1_master[216*4];
 	uint8_t sb1_type3[216];
 	uint8_t sb1_type4[216];
 	uint8_t sb1_type5[216];
 
+	//Sub-block 2 Init
 	uint8_t sb2_type2[144];
 	uint8_t sb2_master[216*4];
 	uint8_t sb2_type3[216];
 	uint8_t sb2_type4[216];
 	uint8_t sb2_type5[216];
 
+	//Broadcast block Init
 	uint8_t bb_type5[30];
 	uint16_t crc;
 	uint8_t *cur;
@@ -284,6 +298,8 @@ int build_ncdb(uint8_t *buf)
 
 	uint32_t scramb_init = tetra_scramb_get_init(TM_MCC, TM_MNC, TM_CC);
 
+
+	//SUB-BLOCK 1
 	memset(sb1_type2, 0, sizeof(sb1_type2));
 	cur = sb1_type2;
 
@@ -317,6 +333,8 @@ int build_ncdb(uint8_t *buf)
 	tetra_scramb_bits(scramb_init, sb1_type5, 216);
 	//printf("Scrambled block 1 bits (SCH/HD): %s\n", osmo_ubit_dump(sb1_type5, 216));
 
+
+	//SUB-BLOCK 2
 	memset(sb2_type2, 0, sizeof(sb2_type2));
 	cur = sb2_type2;
 
@@ -350,7 +368,9 @@ int build_ncdb(uint8_t *buf)
 	// Run scrambling (all-zero): type-5 bits
 	tetra_scramb_bits(scramb_init, sb2_type5, 216);
 	//printf("Scrambled block 2 bits (BNCH): %s\n", osmo_ubit_dump(sb2_type5, 216));
-
+	
+	
+	//BROADCAST BITS
 	// Use pdu_acc_ass from pdus.c
 	uint8_t *bb_type1 = (uint8_t *)pdu_acc_ass; // ACCESS-ASSIGN
 	// Run it through (30,14) RM code: type-2=3=4 bits
@@ -374,20 +394,34 @@ int build_ncdb(uint8_t *buf)
 }
 
 /* Build a full 'Synchronization continuous downlink burst' from SYSINFO-PDU and SYNC-PDU */
+/* 9.4.4.2.6
+ 1 to 12: Normal Training Sequence 3
+ 13 to 14: Phase adjustment Bits 
+ 15 to 94: Freq Correction
+ 95 to 214: Scrambled synchronization block 1 bits
+ 215 to 252: Synchronization training sequence 
+ 253 to 282: Scrambled broadcast bits 
+ 283 to 498: Scrambled block 2 bits 
+ 499 to 500: Phase adjustment bits 
+ 501 to 510: Normal training sequence 3 
+ */
 int build_scdb(uint8_t *buf, const uint8_t fn)
 {
+	//Sub-block 1 sync Init
 	uint8_t sb_type2[80];
 	uint8_t sb_master[80*4];
 	uint8_t sb_type3[120];
 	uint8_t sb_type4[120];
 	uint8_t sb_type5[120];
 
+	//Sub-block 2 Init
 	uint8_t si_type2[144];
 	uint8_t si_master[216*4];
 	uint8_t si_type3[216];
 	uint8_t si_type4[216];
 	uint8_t si_type5[216];
 
+	//Broadcast block Init
 	uint8_t bb_type5[30];
 	uint16_t crc;
 	uint8_t *cur;
@@ -395,6 +429,7 @@ int build_scdb(uint8_t *buf, const uint8_t fn)
 
 	uint32_t scramb_init = tetra_scramb_get_init(TM_MCC, TM_MNC, TM_CC);
 
+	//SUB-BLOCK 1 (Sync)
 	memset(sb_type2, 0, sizeof(sb_type2));
 	cur = sb_type2;
 
@@ -426,6 +461,7 @@ int build_scdb(uint8_t *buf, const uint8_t fn)
 	tetra_scramb_bits(SCRAMB_INIT, sb_type5, 120);
 	//printf("Scrambled synchronization block 1 bits (BSCH): %s\n", osmo_ubit_dump(sb_type5, 120));
 
+	//Sub-block 2
 	memset(si_type2, 0, sizeof(si_type2));
 	cur = si_type2;
 
@@ -460,6 +496,7 @@ int build_scdb(uint8_t *buf, const uint8_t fn)
 	tetra_scramb_bits(scramb_init, si_type5, 216);
 	//printf("Scrambled block 2 bits (BNCH): %s\n", osmo_ubit_dump(si_type5, 216));
 
+	//BROADCAST BITS
 	/* Use pdu_acc_ass/pdu_acc_ass_18 from pdus.c */
 	uint8_t *bb_type1 = (uint8_t *)(fn < 18 ? pdu_acc_ass : pdu_acc_ass_18); // ACCESS-ASSIGN
 	/* Run it through (30,14) RM code: type-2=3=4 bits */

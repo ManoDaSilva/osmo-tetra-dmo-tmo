@@ -3,6 +3,8 @@ OSMO-TETRA-DMO
 
 This is highly experimental, unsupported, DMO-appended fork of osmo-tetra library.
 
+A very hacky TMO downlink implementation is also available.
+
 It is expected to use 
 [suo](https://github.com/tejeez/suo)
 as communication medium.

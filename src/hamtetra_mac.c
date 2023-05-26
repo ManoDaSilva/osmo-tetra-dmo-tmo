@@ -125,22 +125,25 @@ void mac_hamtetra_init()
     // initialize MAC state structure
 	tms = talloc_zero(tetra_tall_ctx, struct tetra_mac_state);
 	tetra_mac_state_init(tms);
-    tms->channel_state = TM_TEST;
+    tms->channel_state = DM_CHANNEL_S_DMREP_IDLE_UNKNOWN;
 
     // initialiaze send buffer
     initialize_framebuffer(0);
 
     presence_signal_counter = presence_signal_multiframe_count[DT254]*18*4;
 	
-	//TMO Implementation test
-	uint16_t cur_hn = 45569; // hyperframe
 
+
+
+}
+
+void mac_hamtetra_tmo_set()
+{
+    //TMO Implementation functions init
 	tetra_rm3014_init();
-	sysinfo_pdu(cur_hn);
 	mac_data_pdu();
 	acc_pdu_18();
-
-
+	tms->channel_state = TM_TEST;
 }
 
 int mac_request_tx_buffer_content(uint8_t *bits, struct timing_slot *slot)
@@ -210,31 +213,30 @@ int mac_request_tx_buffer_content(uint8_t *bits, struct timing_slot *slot)
             break;
 		case TM_TEST:
             printf("[TM_TEST] last chg: %ld - TX slot: %2u %2u %2u ", tms->channel_state_last_chg, slot->tn, slot->fn, slot->mn);
-			
-		/*
-		If FN = 18 and (MN+TN)*mod4=1 ==> BNCH (gen OK)
-		If FN = 18 and (MN+TN)*mod4=3 ==> BSCH (gen OK)
-		Burst caracteristic: TN, FN, MN, type(CB, LB, LDB, NUB, NCDB, SCDB, NDDB, SDDB), contents
-		IF SCDB ==> BSCH
-		Add to output buffer
-		*/
-			
-			
-			if(slot->tn < 3 || slot->fn == 18){
-				acc_pdu(0, 0);
-				//printf("SCDB BURST\n");
+			/*
+			If FN = 18 and (MN+TN)*mod4=1 ==> BNCH (gen OK)
+			If FN = 18 and (MN+TN)*mod4=3 ==> BSCH (gen OK)
+			If SCDB ==> BSCH
+			*/
+			if (frame_buf_master.tn[slotnum].len < 1) { //If buffer is empty
+				sysinfo_pdu(slot->hn);
 				sync_pdu(TM_CC, slot->mn, slot->fn, slot->tn, TM_MCC, TM_MNC);
-				len = build_scdb(bits, slot->fn);
+			
+				if(slot->tn < 3 || slot->fn == 18){
+					acc_pdu(0, 0); //Unallocated
+					//printf("--- SCDB BURST ---\n");
+					len = build_scdb(bits, slot->fn);
+					
+				}
+				else{
+					acc_pdu(2, 4);	//Common	
+					//printf("--- NCDB BURST ---\n");				
+					len = build_ncdb(bits);
+				}
+				sent_buffer_set(slot, len);
+				printf(" - burst len: %d\n", len);
+				return len;
 			}
-			else{
-				acc_pdu(2, 4);
-				sync_pdu(TM_CC, slot->mn, slot->fn, slot->tn, TM_MCC, TM_MNC);
-				len = build_ncdb(bits);
-			}
-            sent_buffer_set(slot, len);
-            printf(" - burst len: %d\n", len);
-            return len;
-
             break;
 
 

@@ -86,6 +86,7 @@ static int hamtetra_init(const char *hw, double tetra_freq, int mode)
 
 	mac_hamtetra_init();
 
+	//Hardware option selection
 	if (strcmp(hw, "file") == 0) {
 		return -1; // not implemented
 		//io_code = &file_io_code;
@@ -102,7 +103,7 @@ static int hamtetra_init(const char *hw, double tetra_freq, int mode)
 		io_conf->tx_name = strdup(hw + 5);
 		io_conf->tx_latency = 480;
 
-		if (mode == 0) // monitor only (doesn't work yet)
+		if (mode == 0) // monitor only (doesn't work yet with alsa HW)
 			io_conf->tx_on = 0;
 
 		io_arg = alsa_io_code.init(io_conf);
@@ -115,6 +116,8 @@ static int hamtetra_init(const char *hw, double tetra_freq, int mode)
 		if (mode == 0) // monitor only
 			io_conf->tx_on = 0;
 
+		if (mode == 2) // TMO downlink tests
+			mac_hamtetra_tmo_set();
 		io_conf->buffer = 1024;
 		io_conf->tx_latency = 6144;
 
@@ -245,7 +248,8 @@ int main(int argc, char *argv[])
 			"MODE options are:\n"
 			"   0         DMO monitor\n"
 			"   1         DMO repeater (default)\n"
-			"FREQUENCY is TETRA signal center frequency in MHz.\n"
+			"   2         TMO downlink (extremely experimental)\n"
+			"FREQUENCY is TETRA signal center frequency in MHz. For TMO, this will be the downlink frequency.\n"
 			"For example: %s limemini 416.2375 0\n",
 			argv[0], argv[0]);
 		return 1;

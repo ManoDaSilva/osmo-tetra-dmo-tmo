@@ -201,6 +201,7 @@ void mac_resource_pdu(uint8_t *pdu, uint8_t pdu_len)
 }
 
 /* ACCESS-ASSIGN PDU contents for frame 1 to 17 */
+
 void acc_pdu(uint8_t af1, uint8_t af2)
 {
 	struct bitvec bv;

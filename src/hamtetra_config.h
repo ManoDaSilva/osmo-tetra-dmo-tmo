@@ -9,7 +9,7 @@
 
 #define TM_MCC 206
 #define TM_MNC 1001
-#define TM_CC 0x29
+#define TM_CC 0x01
 
 
 
