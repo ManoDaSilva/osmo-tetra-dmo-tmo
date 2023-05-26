@@ -70,7 +70,7 @@ const struct rx_output_code hamtetra_rx_output_code = { "HamTetra", NULL, NULL, 
 const struct tx_input_code hamtetra_tx_input_code = { "HamTetra", NULL, NULL, NULL, NULL, NULL, hamtetra_tx_input_frame, dummy_tick };
 
 
-static int hamtetra_init(const char *hw, double tetra_freq, int mode)
+static int hamtetra_init(const char *hw, double tetra_txrxfreq, int mode)
 {
 	// Sample rate for SDR
 	double samplerate = 0.5e6;
@@ -115,7 +115,6 @@ static int hamtetra_init(const char *hw, double tetra_freq, int mode)
 		io_conf->tx_on = 1;
 		if (mode == 0) // monitor only
 			io_conf->tx_on = 0;
-
 		if (mode == 2) // TMO downlink tests
 			mac_hamtetra_tmo_set();
 		io_conf->buffer = 1024;
@@ -190,7 +189,7 @@ static int hamtetra_init(const char *hw, double tetra_freq, int mode)
 
 		io_conf->samplerate = samplerate;
 		io_conf->rx_centerfreq =
-		io_conf->tx_centerfreq = tetra_freq - offset_freq;
+		io_conf->tx_centerfreq = tetra_txrxfreq - offset_freq;
 
 		if (!io_conf->rx_on) {
 			// This works better for TX-only use
