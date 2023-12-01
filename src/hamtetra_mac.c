@@ -213,25 +213,37 @@ int mac_request_tx_buffer_content(uint8_t *bits, struct timing_slot *slot)
             break;
 		case TM_TEST:
             printf("[TM_TEST] last chg: %ld - TX slot: %2u %2u %2u ", tms->channel_state_last_chg, slot->tn, slot->fn, slot->mn);
+			if (frame_buf_master.tn[slotnum].len < 1) { //If buffer is empty
+				sysinfo_pdu(slot->hn);
+				sync_pdu(TM_CC, slot->mn, slot->fn, slot->tn, TM_MCC, TM_MNC);
+			//From analysed signals:
 			/*
 			If FN = 18 and (MN+TN)*mod4=1 ==> BNCH (gen OK)
 			If FN = 18 and (MN+TN)*mod4=3 ==> BSCH (gen OK)
 			If SCDB ==> BSCH
+
+
+			TN1: NULL + SYSINFO (SCH/HD) ==> NCDB - AACH: Common
+			TN2-3-4: BSCH - SYNCINFO + SYSINFO (SCH/HD) ==>SCDB - AACH: Unallocated
+
+			Frame 18: 
+			TN1-2-3-4: BSCH - SYNCINFO + SYSINFO (SCH/HD) ==>SCDB
+			(TN1 still uses common AACH)
 			*/
-			if (frame_buf_master.tn[slotnum].len < 1) { //If buffer is empty
-				sysinfo_pdu(slot->hn);
-				sync_pdu(TM_CC, slot->mn, slot->fn, slot->tn, TM_MCC, TM_MNC);
-			
-				if(slot->tn < 3 || slot->fn == 18){
-					acc_pdu(0, 0); //Unallocated
-					//printf("--- SCDB BURST ---\n");
-					len = build_scdb(bits, slot->fn);
-					
+				
+			//TODO Debug this, and check if timeslot logic holds water.
+				if(slot->tn < 4 || slot->fn == 18){
+					acc_pdu(2, 4);	//Common	
+					//printf("--- NCDB BURST ---\n");	
+					//printf("NULL + SYSINFO (SCH/HD)");					
+					len = build_ncdb(bits);
 				}
 				else{
-					acc_pdu(2, 4);	//Common	
-					//printf("--- NCDB BURST ---\n");				
-					len = build_ncdb(bits);
+					acc_pdu(0, 0); //Unallocated
+					//printf("--- SCDB BURST ---\n");
+					//printf("BSCH - SYNCINFO + SYSINFO (SCH/HD)");
+					len = build_scdb(bits, slot->fn);
+					
 				}
 				sent_buffer_set(slot, len);
 				printf(" - burst len: %d\n", len);

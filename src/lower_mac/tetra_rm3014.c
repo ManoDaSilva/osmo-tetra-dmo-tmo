@@ -67,7 +67,7 @@ void tetra_rm3014_init(void)
 		/* lower 16 bits from rm_30_14_gen */
 		val |= shift_bits_together(rm_30_14_gen[i], 16);
 		rm_30_14_rows[i] = val;
-		printf("rm_30_14_rows[%u] = 0x%08x\n", i, val);
+		//printf("rm_30_14_rows[%u] = 0x%08x\n", i, val);
 	}
 }
 
