@@ -118,7 +118,7 @@ static int hamtetra_init(const char *hw, double tetra_txrxfreq, int mode)
 		if (mode == 2) // TMO downlink tests
 			mac_hamtetra_tmo_set();
 		io_conf->buffer = 1024;
-		io_conf->tx_latency = 6144;
+		io_conf->tx_latency = 1024 * 10; // somewhat below 2 slots
 
 		// SDR specific configuration
 		if (strcmp(hw, "limesdr") == 0) {
@@ -148,19 +148,17 @@ static int hamtetra_init(const char *hw, double tetra_txrxfreq, int mode)
 
 		} else if (strcmp(hw, "sx") == 0) {
 			soapysdr_io_code.set_conf(io_conf, "device:driver", "sx");
-			//soapysdr_io_code.set_conf(io_conf, "rx_stream:link", "1");
-			//soapysdr_io_code.set_conf(io_conf, "tx_stream:link", "1");
-			io_conf->use_time = 0;
+			io_conf->use_time = 1;
 			io_conf->tx_cont = 1;
 			io_conf->rx_antenna = "RX";
 			io_conf->tx_antenna = "TX";
 			io_conf->rx_gain = 50; // TBD
 			io_conf->tx_gain = 50; // TBD
-			// Sample rate is 1/4 times the default, so reduce buffer sizes to 1/4 too
+			// Sample rate is about 1/4 times the default, so reduce buffer sizes to 1/4 too
 			io_conf->buffer /= 4;
 			io_conf->tx_latency /= 4;
 
-			samplerate = 125000.0;
+			samplerate = 150000.0;
 			offset_freq = 25000.0;
 
 		} else if (strcmp(hw, "audio-in") == 0) {
@@ -239,7 +237,7 @@ int main(int argc, char *argv[])
 			"   limemini  LimeSDR Mini\n"
 			"   limenet   LimeNET Micro\n"
 			"   usrp      USRP B200\n"
-			"   sx        SXXCVR\n"
+			"   sx        SXceiver\n"
 			"   rtlsdr    RTL-SDR (receive only)\n"
 			"   audio-in  Audio centered at 12 kHz (receive only, through SoapyAudio)\n"
 			"   alsa:NAME Audio centered at 12 kHz (full duplex through ALSA)\n"
