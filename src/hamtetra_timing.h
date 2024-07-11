@@ -23,7 +23,7 @@ struct timing_state {
 	// Next transmission slot
 	uint64_t tx_time;
 	unsigned tx_slot; // Combined slot number, counting from 0 to 4319
-
+	unsigned hn;
 	unsigned char prev_dmo; // Flag: a DMO burst was transmitted in the previous slot
 
 	unsigned char use_interslot_bits; // Configuration flag
