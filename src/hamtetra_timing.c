@@ -27,7 +27,7 @@ struct timing_state *timing_init()
 	s->slot_time = 1e9 * 255.0 / 18000.0 + 0.5;
 	s->use_interslot_bits = 1;
 	s->use_calibration = 1;
-
+	s->hn = 1;
 	return s;
 }
 
@@ -82,7 +82,7 @@ int timing_rx_burst(struct timing_state *s, const uint8_t *bits, int len, uint64
 }
 
 
-int timing_tx_burst(struct timing_state *s, uint8_t *bits, int maxlen, uint64_t *ts)
+int timing_tx_burst(struct timing_state* s, uint8_t* bits, int maxlen, uint64_t* ts)
 {
 	if (maxlen < 510)
 		return -1;
@@ -95,7 +95,8 @@ int timing_tx_burst(struct timing_state *s, uint8_t *bits, int maxlen, uint64_t 
 	uint64_t tnow = *ts;
 	if (s->tx_time == 0) {
 		// Initialize timing on first tick
-		s->tx_time = tnow + s->slot_time*2;
+		s->tx_time = tnow + s->slot_time * 2;
+		s->hn = 1; // Initialize Hyperframe Numbering
 	}
 
 	const uint64_t tx_time = s->tx_time;
@@ -103,13 +104,23 @@ int timing_tx_burst(struct timing_state *s, uint8_t *bits, int maxlen, uint64_t 
 	if (tdiff >= -time_margin) {
 		const unsigned slot = s->tx_slot;
 
+		// Calculate TN, FN, and MN based on the slot value
+		unsigned tn = (slot % 4) + 1; // TN increments from 1 to 4
+		unsigned fn = ((slot / 4) % 18) + 1; // FN increments from 1 to 18
+		unsigned mn = ((slot / (4 * 18)) % 60) + 1; // MN increments from 1 to 60
+		unsigned hn = s->hn; // Set the Hyperframe Number
+
+		if (tn == 1 && fn == 1 && mn == 1) {
+			s->hn = (s->hn + 1) % 65535; // Reset hn after xNum hyperframes
+		}
+
 		struct timing_slot tslot = {
 			.time = tx_time,
 			.diff = 0,
-			.tn =  (slot % 4)       + 1,
-			.fn = ((slot / 4) % 18) + 1,
-			.mn =  (slot / (4*18))  + 1,
-			.hn = 0
+			.tn = tn,
+			.fn = fn,
+			.mn = mn,
+			.hn = hn,
 		};
 
 		retlen = slotter_tx_burst(s->slotter, bits, maxlen, &tslot);
@@ -117,7 +128,8 @@ int timing_tx_burst(struct timing_state *s, uint8_t *bits, int maxlen, uint64_t 
 		unsigned char is_dmo = 0;
 		if (retlen < 0) {
 			// No transmission
-		} else if (retlen == 470) {
+		}
+		else if (retlen == 470) {
 			// DMO burst
 			is_dmo = 1;
 			if (s->use_interslot_bits && s->prev_dmo) {
@@ -129,15 +141,18 @@ int timing_tx_burst(struct timing_state *s, uint8_t *bits, int maxlen, uint64_t 
 				memmove(bits + 40, bits, retlen);
 				memcpy(bits, g_bits, 40);
 				retlen += 40;
-			} else {
+			}
+			else {
 				/* DMO burst starts 34 bits (17 symbols) after slot boundary. */
 				offset_syms = 17;
 			}
-		} else if (retlen == 510) {
+		}
+		else if (retlen == 510) {
 			/* Burst that fills the whole slot.
 			 * Keep the timestamp on slot boundary. */
 			offset_syms = 0;
-		} else {
+		}
+		else {
 			fprintf(stderr, "Warning: unexpected burst length %d\n", retlen);
 		}
 		if (retlen >= 0)
