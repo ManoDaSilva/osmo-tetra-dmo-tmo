@@ -30,10 +30,10 @@ On lower-end devices such as older Raspberry Pi, you might experience choppy dow
 	sudo chrt -r 70 ./hamtetra_main2 sx 438.275 2
 	
 As there are no configuration files yet, most base station values are set directly in the code, including: 
-	- Downlink frequency: 439.275. If you wish to run it on any other frequency, edit pdus.c, line 120.
-	- MCC: 206. hamtetra_config.h, line 10
-	- MNC: 1001. hamtetra_config.h, line 11
-	- Duplex spacing ID: 7. pdus.c, line 123
+- Downlink frequency: 439.275. If you wish to run it on any other frequency, edit pdus.c, line 120.
+- MCC: 206. hamtetra_config.h, line 10
+- MNC: 1001. hamtetra_config.h, line 11
+- Duplex spacing ID: 7. pdus.c, line 123
 	
 
 Original osmo-tetra README.md:
