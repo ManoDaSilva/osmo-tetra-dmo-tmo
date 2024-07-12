@@ -1,9 +1,13 @@
-OSMO-TETRA-DMO
-==============
+OSMO-TETRA-DMO-TMO
+==================
 
 This is highly experimental, unsupported, DMO-appended fork of osmo-tetra library.
 
-A very hacky TMO downlink implementation is also available.
+A very hacky TMO downlink implementation is being developed on that branch. 
+
+Please refer to the [HamTETRA](https://github.com/rats-ry/HamTetra) repository, install all depedencies before building this fork. 
+
+To use TMO, run ./hamtetra_main2 using option number 2.
 
 It is expected to use 
 [suo](https://github.com/tejeez/suo)
