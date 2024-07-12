@@ -1,17 +1,30 @@
+
 OSMO-TETRA-DMO-TMO
 ==================
 
-This is highly experimental, unsupported, DMO-appended fork of osmo-tetra library.
+This is a very hacky TMO implementation, based on an experimental, unsupported, DMO-appended fork of osmo-tetra library.
+It is expected to use [suo](https://github.com/tejeez/suo) as communication medium.
 
-A very hacky TMO downlink implementation is being developed on that branch. 
+Please first refer to the [HamTETRA](https://github.com/rats-ry/HamTetra) repository, install all dependencies. 
+Then clone this repository inside HamTetra:
 
-Please refer to the [HamTETRA](https://github.com/rats-ry/HamTetra) repository, install all depedencies before building this fork. 
+    cd
+    cd HamTetra
+    git clone https://github.com/ManoDaSilva/osmo-tetra-dmo-tmo/
+    git checkout tmo-dev
+    cd osmo-tetra-dmo-tmo/src
+    make
 
-To use TMO, run ./hamtetra_main2 using option number 2.
+You might also encounter a "DSO Missing from command line". In this case, you'll have to run `make` using this command: 
 
-It is expected to use 
-[suo](https://github.com/tejeez/suo)
-as communication medium.
+    make LDFLAGS="-Wl,--copy-dt-needed-entries"
+
+
+To use TMO, run `./hamtetra_main2` using option number 2. Example:
+
+    ./hamtetra_main2 sx 438.275 2
+
+If you wish to run the downlink on any other frequency, you'll have to edit the DL frequency in pdus.c, line 120.
 
 
 
