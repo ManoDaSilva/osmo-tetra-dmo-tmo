@@ -5,6 +5,8 @@ OSMO-TETRA-DMO-TMO
 This is a very hacky TMO implementation, based on an experimental, unsupported, DMO-appended fork of osmo-tetra library.
 It is expected to use [suo](https://github.com/tejeez/suo) as communication medium.
 
+At this state, this is a Tx-only base station proof of concept. Only the downlink is transmitted, and only a few radio models will try to transmit to it (Sepuras mainly). Uplink is being worked on. 
+
 Please first refer to the [HamTETRA](https://github.com/rats-ry/HamTetra) repository, install all dependencies. 
 Then clone this repository inside HamTetra:
 
@@ -19,14 +21,20 @@ You might also encounter a "DSO Missing from command line". In this case, you'll
 
     make LDFLAGS="-Wl,--copy-dt-needed-entries"
 
-
 To use TMO, run `./hamtetra_main2` using option number 2. Example:
 
     ./hamtetra_main2 sx 438.275 2
-
-If you wish to run the downlink on any other frequency, you'll have to edit the DL frequency in pdus.c, line 120.
-
-
+	
+On lower-end devices such as older Raspberry Pi, you might experience choppy downlink. This can be mitigated by running the process at higher priority:
+	
+	sudo chrt -r 70 ./hamtetra_main2 sx 438.275 2
+	
+As there are no configuration files yet, most base station values are set directly in the code, including: 
+	- Downlink frequency: 439.275. If you wish to run it on any other frequency, edit pdus.c, line 120.
+	- MCC: 206. hamtetra_config.h, line 10
+	- MNC: 1001. hamtetra_config.h, line 11
+	- Duplex spacing ID: 7. pdus.c, line 123
+	
 
 Original osmo-tetra README.md:
 
